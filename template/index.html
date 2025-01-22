@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Forum</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f9;
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #comments p {
+        background: #f1f1f1;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to the Student Forum</h1>
+      <form id="commentForm">
+        <textarea id="comment" placeholder="Enter your comment"></textarea>
+        <button type="button" onclick="addComment()">Submit</button>
+      </form>
+
+      <div id="result">
+        <p><strong>Profanity Level:</strong> <span id="severity">-</span></p>
+      </div>
+
+      <h2>Comments</h2>
+      <div id="comments"></div>
+    </div>
+
+    <script>
+      async function addComment() {
+        const comment = document.getElementById("comment").value;
+
+        try {
+          const response = await fetch("/add_comment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: 1, // Replace with logged-in user's ID
+              post_id: 123, // Replace with the current post's ID
+              comment: comment,
+            }),
+          });
+
+          if (!response.ok) throw new Error("Failed to add comment");
+
+          const data = await response.json();
+          alert(data.message || "Comment added successfully");
+          document.getElementById("severity").textContent = data.severity;
+          fetchComments();
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
+      }
+
+      async function fetchComments() {
+        const response = await fetch("/get_comments/123"); // Replace with the current post's ID
+        const comments = await response.json();
+        const commentsDiv = document.getElementById("comments");
+        commentsDiv.innerHTML = comments
+          .map(
+            (comment) =>
+              `<p>${comment.filtered_comment}</p><small>Original: ${comment.original_comment}</small>`
+          )
+          .join("");
+      }
+
+      // Fetch comments on page load
+      fetchComments();
+    </script>
+  </body>
+</html>
